@@ -6,7 +6,7 @@ BOT_TOKEN = ""
 
 API_KEY = ""
 
-ROLE_ID = ""
+ROLE_NAME = "인증됨"
 
 intents = discord.Intents.default()
 intents.members = True
@@ -44,19 +44,27 @@ async def on_member_join(member):
             if code == "NO_DATA_FOUND":
                 await guild.system_channel.send(f"{member.mention} (은)는 PlanetEarth 디스코드에 인증되지 않은 유저입니다.")
             elif code == "RATE_LIMIT":
-                await guild.system_channel.send("봇의 요청이 제한되었습니다.")
+                await guild.system_channel.send(f"봇의 요청이 제한되었습니다. {member.mention} 의 인증에 실패했습니다.")
             else:
-                await guild.system_channel.send("알 수 없는 오류가 발생했습니다.")
+                await guild.system_channel.send(f"알 수 없는 오류가 발생했습니다. {member.mention} 의 인증에 실패했습니다.")
             return
 
         ign = discord_json["data"][0]["name"]
-        role = discord.utils.get(guild.roles, id=int(ROLE_ID))
 
-        if role:
-            await member.add_roles(role)
+        if ign:
             await member.edit(nick=ign)
         else:
-            await guild.system_channel.send(f"역할을 찾을 수 없습니다. {member.mention} 에게 역할을 지급하지 못했습니다.")
+            await guild.system_channel.send(f"알 수 없는 오류가 발생했습니다. {member.mention} 의 인증에 실패했습니다.")
+
+        verified_roles = [role for role in guild.roles if role.name == ROLE_NAME]
+
+        if len(verified_roles) == 1:
+            await member.edit(nick=ign)
+            await member.add_roles(verified_roles[0])
+        elif len(verified_roles) > 1:
+            await guild.system_channel.send(f"서버에 {ROLE_NAME} 역할이 2개 이상입니다. {member.mention} 에게 역할을 지급하지 못했습니다.")
+        else:
+            await guild.system_channel.send(f"서버에서 {ROLE_NAME} 역할을 찾을 수 없습니다. {member.mention} 에게 역할을 지급하지 못했습니다.")
         return
 
 bot.run(BOT_TOKEN)
