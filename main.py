@@ -27,7 +27,7 @@ async def fetch_json(session, url):
 @bot.event
 async def on_ready():
     await tree.sync()
-    await bot.change_presence(status=discord.Status.online,activity=discord.Activity(type=discord.ActivityType.playing, name="planetearth.kr"))
+    await bot.change_presence(status=discord.Status.online, activity=discord.Game(name="planetearth.kr"))
     for guild in bot.guilds:
         print(guild.name)
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
@@ -35,7 +35,7 @@ async def on_ready():
 @bot.event
 async def on_member_join(member):
     guild = member.guild
-    if not guild.id == 971724292482019359:
+    if guild.id != 971724292482019359:
         discord_url = f"https://planetearth.kr/api/discord.php?key={API_KEY}&discord={member.id}"
 
         async with aiohttp.ClientSession() as session:
@@ -69,14 +69,14 @@ async def help(interaction: discord.Interaction):
 @tree.command(name="status", description="봇 상태 확인를 확인합니다.")
 async def status(interaction: discord.Interaction):
     if interaction.user.id == 1086117494189723658:
-        bot_status = discord.Embed(title="봇 정보", description="PlanetEarth 공식봇 상태를 확인합니다.", color = discord.Color.green())
+        bot_status = discord.Embed(title="봇 정보", description="PlanetEarth 공식봇 상태를 확인합니다.", color=discord.Color.green())
         bot_status.add_field(name="CPU 사용률", value=f"{psutil.cpu_percent()}%", inline=False)
         bot_status.add_field(name="메모리 사용률", value=f"{psutil.virtual_memory().percent}%", inline=False)
         latency = await aioping.ping("1.1.1.1")
         bot_status.add_field(name="지연시간", value=f"{latency * 1000:.1f}ms", inline=False)
         await interaction.response.send_message(embed=bot_status)
     else:
-        await interaction.response.send_message(f"이 명령어는 사용할 수 없습니다.")
+        await interaction.response.send_message("이 명령어는 사용할 수 없습니다.")
 
 @tree.command(name="resident", description="플레이어 정보를 확인합니다.")
 @discord.app_commands.describe(name="플레이어 이름을 입력해주세요")
@@ -92,11 +92,11 @@ async def resident(interaction: discord.Interaction, name: str):
         if resident_json["status"] == "FAILED":
             code = resident_json["error"]["code"]
             if code == "NO_DATA_FOUND":
-                await interaction.response.send_message(f"존재하지 않는 플레이어입니다!")
+                await interaction.response.send_message("존재하지 않는 플레이어입니다!")
             elif code == "RATE_LIMIT":
-                await interaction.response.send_message(f"봇의 요청이 제한되었습니다.")
+                await interaction.response.send_message("봇의 요청이 제한되었습니다.")
             else:
-                await interaction.response.send_message(f"알 수 없는 오류가 발생했습니다.")
+                await interaction.response.send_message("알 수 없는 오류가 발생했습니다.")
             return
 
         data = resident_json["data"][0]
@@ -136,15 +136,15 @@ async def town(interaction: discord.Interaction, name: str):
         if town_json["status"] == "FAILED":
             code = town_json["error"]["code"]
             if code == "NO_DATA_FOUND":
-                await interaction.response.send_message(f"존재하지 않는 마을입니다!")
+                await interaction.response.send_message("존재하지 않는 마을입니다!")
             elif code == "RATE_LIMIT":
-                await interaction.response.send_message(f"봇의 요청이 제한되었습니다.")
+                await interaction.response.send_message("봇의 요청이 제한되었습니다.")
             else:
-                await interaction.response.send_message(f"알 수 없는 오류가 발생했습니다.")
+                await interaction.response.send_message("알 수 없는 오류가 발생했습니다.")
             return
 
         data = town_json["data"][0]
-        town_info = discord.Embed(title=data["name"], color = discord.Color.green())
+        town_info = discord.Embed(title=data["name"], color=discord.Color.green())
         town_info.add_field(name="**공지**", value=data["townBoard"], inline=False)
         town_info.add_field(name="**시장**", value=data["mayor"], inline=False)
         if data["nation"]:
@@ -153,7 +153,7 @@ async def town(interaction: discord.Interaction, name: str):
             town_info.add_field(name="**국가**", value="없음", inline=False)
         town_info.add_field(name="**주민 수**", value=data["memberCount"], inline=False)
         town_info.add_field(name="**클레임 크기**", value=data["claimSize"], inline=False)
-        town_info.add_field(name="**설립일**", value=f"<t:{int(data["registered"])//1000}:f>", inline=False)
+        town_info.add_field(name="**설립일**", value=f"<t:{int(data['registered'])//1000}:f>", inline=False)
 
         await interaction.response.send_message(embed=town_info)
 
@@ -171,15 +171,15 @@ async def nation(interaction: discord.Interaction, name: str):
         if nation_json["status"] == "FAILED":
             code = nation_json["error"]["code"]
             if code == "NO_DATA_FOUND":
-                await interaction.response.send_message(f"존재하지 않는 국가입니다!")
+                await interaction.response.send_message("존재하지 않는 국가입니다!")
             elif code == "RATE_LIMIT":
-                await interaction.response.send_message(f"봇의 요청이 제한되었습니다.")
+                await interaction.response.send_message("봇의 요청이 제한되었습니다.")
             else:
-                await interaction.response.send_message(f"알 수 없는 오류가 발생했습니다.")
+                await interaction.response.send_message("알 수 없는 오류가 발생했습니다.")
             return
 
         data = nation_json["data"][0]
-        nation_info = discord.Embed(title=data["name"], color = discord.Color.green())
+        nation_info = discord.Embed(title=data["name"], color=discord.Color.green())
         nation_info.add_field(name="**공지**", value=data["nationBoard"], inline=False)
         nation_info.add_field(name="**왕**", value=data["leader"], inline=False)
         nation_info.add_field(name="**국민 수**", value=data["memberCount"], inline=False)
@@ -192,7 +192,7 @@ async def nation(interaction: discord.Interaction, name: str):
             nation_info.add_field(name="**적**", value=data["enemies"], inline=False)
         else:
             nation_info.add_field(name="**적**", value="없음", inline=False)
-        nation_info.add_field(name="**설립일**", value=f"<t:{int(data["registered"])//1000}:f>", inline=False)
+        nation_info.add_field(name="**설립일**", value=f"<t:{int(data['registered'])//1000}:f>", inline=False)
 
         await interaction.response.send_message(embed=nation_info)
 
