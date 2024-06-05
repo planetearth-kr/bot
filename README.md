@@ -8,5 +8,6 @@
 ```
 pip install discord.py
 pip install aiohttp
+pip install aioping
 python main.py
 ```
