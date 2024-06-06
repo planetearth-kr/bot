@@ -1,6 +1,4 @@
 import aiohttp
-import aioping
-import psutil
 import discord
 
 BOT_TOKEN = ""
@@ -34,7 +32,7 @@ async def on_ready():
 
 @bot.event
 async def on_guild_join(guild):
-    print("Joined " + guild.name)
+    print(f"Joined {guild.name}")
 
 @bot.event
 async def on_member_join(member):
@@ -69,18 +67,6 @@ async def on_member_join(member):
 @tree.command(name="help", description="봇 소개를 확인합니다.")
 async def help(interaction: discord.Interaction):
     await interaction.response.send_message(f"## PlanetEarth 공식봇 소개\n\nPlanetEarth에 관련된 유용한 기능을 제공합니다.\n\n### 기능\n```- 새로운 유저가 디스코드 서버에 들어올 때 PlanetEarth 에 인증된 유저인지 확인하고, 이름을 닉네임으로 설정합니다.\n- 서버에 '인증됨' 역할이 있을 경우 자동으로 역할을 지급합니다.```\n\n### 명령어\n```/resident - 플레이어 정보를 확인합니다.\n/town - 마을 정보를 확인합니다.\n/nation - 국가 정보를 확인합니다.```")
-
-@tree.command(name="status", description="봇 상태 확인를 확인합니다.")
-async def status(interaction: discord.Interaction):
-    if interaction.user.id == 1086117494189723658:
-        bot_status = discord.Embed(title="봇 정보", description="PlanetEarth 공식봇 상태를 확인합니다.", color=discord.Color.green())
-        bot_status.add_field(name="CPU 사용률", value=f"{psutil.cpu_percent()}%", inline=False)
-        bot_status.add_field(name="메모리 사용률", value=f"{psutil.virtual_memory().percent}%", inline=False)
-        latency = await aioping.ping("1.1.1.1")
-        bot_status.add_field(name="지연시간", value=f"{latency * 1000:.1f}ms", inline=False)
-        await interaction.response.send_message(embed=bot_status)
-    else:
-        await interaction.response.send_message("이 명령어는 사용할 수 없습니다.")
 
 @tree.command(name="resident", description="플레이어 정보를 확인합니다.")
 @discord.app_commands.describe(name="플레이어 이름을 입력해주세요")
