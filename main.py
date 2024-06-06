@@ -33,10 +33,14 @@ async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
 
 @bot.event
+async def on_guild_join(guild):
+    print("Joined " + guild.name)
+
+@bot.event
 async def on_member_join(member):
     guild = member.guild
     if guild.id != 971724292482019359:
-        discord_url = f"https://planetearth.kr/api/discord.php?key={API_KEY}&discord={member.id}"
+        discord_url = f"https://planetearth.kr/api/discord?key={API_KEY}&discord={member.id}"
 
         async with aiohttp.ClientSession() as session:
             discord_json = await fetch_json(session, discord_url)
@@ -81,7 +85,7 @@ async def status(interaction: discord.Interaction):
 @tree.command(name="resident", description="플레이어 정보를 확인합니다.")
 @discord.app_commands.describe(name="플레이어 이름을 입력해주세요")
 async def resident(interaction: discord.Interaction, name: str):
-    resident_url = f"https://planetearth.kr/api/resident.php?key={API_KEY}&name={name}"
+    resident_url = f"https://planetearth.kr/api/resident?key={API_KEY}&name={name}"
 
     async with aiohttp.ClientSession() as session:
         resident_json = await fetch_json(session, resident_url)
@@ -100,7 +104,7 @@ async def resident(interaction: discord.Interaction, name: str):
             return
 
         data = resident_json["data"][0]
-        town_url = f"https://planetearth.kr/api/town.php?key={API_KEY}&name={data['town']}"
+        town_url = f"https://planetearth.kr/api/town?key={API_KEY}&name={data['town']}"
 
         town_json = await fetch_json(session, town_url)
         if not town_json:
@@ -125,7 +129,7 @@ async def resident(interaction: discord.Interaction, name: str):
 @tree.command(name="town", description="마을 정보를 확인합니다.")
 @discord.app_commands.describe(name="마을 이름을 입력해주세요")
 async def town(interaction: discord.Interaction, name: str):
-    town_url = f"https://planetearth.kr/api/town.php?key={API_KEY}&name={name}"
+    town_url = f"https://planetearth.kr/api/town?key={API_KEY}&name={name}"
 
     async with aiohttp.ClientSession() as session:
         town_json = await fetch_json(session, town_url)
@@ -160,7 +164,7 @@ async def town(interaction: discord.Interaction, name: str):
 @tree.command(name="nation", description="국가 정보를 확인합니다.")
 @discord.app_commands.describe(name="국가 이름을 입력해주세요")
 async def nation(interaction: discord.Interaction, name: str):
-    nation_url = f"https://planetearth.kr/api/nation.php?key={API_KEY}&name={name}"
+    nation_url = f"https://planetearth.kr/api/nation?key={API_KEY}&name={name}"
 
     async with aiohttp.ClientSession() as session:
         nation_json = await fetch_json(session, nation_url)
