@@ -64,7 +64,7 @@ async def on_member_join(member):
 
 @tree.command(name="help", description="봇 소개를 확인합니다.")
 async def help(interaction: discord.Interaction):
-    await interaction.response.send_message(f"## PlanetEarth 봇 소개\n\nPlanetEarth 에 관련된 유용한 기능을 제공합니다.\n\n### 기능\n```- 새로운 유저가 디스코드 서버에 들어올 때 PlanetEarth 에 인증된 유저인지 확인하고, 이름을 닉네임으로 설정합니다.\n- 서버에 '인증됨' 역할이 있을 경우 자동으로 역할을 지급합니다.```\n\n### 명령어\n```/resident - 플레이어 정보를 확인합니다.\n/town - 마을 정보를 확인합니다.\n/nation - 국가 정보를 확인합니다.```")
+    await interaction.response.send_message(f"## PlanetEarth 공식봇 소개\n\nPlanetEarth에 관련된 유용한 기능을 제공합니다.\n\n### 기능\n```- 새로운 유저가 디스코드 서버에 들어올 때 PlanetEarth 에 인증된 유저인지 확인하고, 이름을 닉네임으로 설정합니다.\n- 서버에 '인증됨' 역할이 있을 경우 자동으로 역할을 지급합니다.```\n\n### 명령어\n```/resident - 플레이어 정보를 확인합니다.\n/town - 마을 정보를 확인합니다.\n/nation - 국가 정보를 확인합니다.```")
 
 @tree.command(name="status", description="봇 상태 확인를 확인합니다.")
 async def status(interaction: discord.Interaction):
@@ -107,14 +107,14 @@ async def resident(interaction: discord.Interaction, name: str):
             await interaction.response.send_message("PlanetEarth API가 응답하지 않습니다. 디스코드 공지를 참고해주세요.")
             return
 
-        resident_info = discord.Embed(title=data["name"], color=discord.Color.green())
+        resident_info = discord.Embed(title=data["name"].replace("_", "\\_"), color=discord.Color.green())
         resident_info.set_thumbnail(url=f"https://mc-heads.net/avatar/{data['name']}/600.png")
         resident_info.add_field(name="**최초 접속일**", value=f"<t:{int(data['registered'])//1000}:f>", inline=False)
         resident_info.add_field(name="**최근 접속일**", value=f"<t:{int(data['lastOnline'])//1000}:f>", inline=False)
         if data["town"]:
-            resident_info.add_field(name="**마을**", value=data["town"], inline=False)
+            resident_info.add_field(name="**마을**", value=data["town"].replace("_", "\\_"), inline=False)
             if town_json["data"] and town_json["data"][0].get("nation"):
-                resident_info.add_field(name="**국가**", value=town_json["data"][0]["nation"], inline=False)
+                resident_info.add_field(name="**국가**", value=town_json["data"][0]["nation"].replace("_", "\\_"), inline=False)
             else:
                 resident_info.add_field(name="**국가**", value="없음", inline=False)
         else:
@@ -144,11 +144,11 @@ async def town(interaction: discord.Interaction, name: str):
             return
 
         data = town_json["data"][0]
-        town_info = discord.Embed(title=data["name"], color=discord.Color.green())
-        town_info.add_field(name="**공지**", value=data["townBoard"], inline=False)
-        town_info.add_field(name="**시장**", value=data["mayor"], inline=False)
+        town_info = discord.Embed(title=data["name"].replace("_", "\\_"), color=discord.Color.green())
+        town_info.add_field(name="**공지**", value=data["townBoard"].replace("_", "\\_"), inline=False)
+        town_info.add_field(name="**시장**", value=data["mayor"].replace("_", "\\_"), inline=False)
         if data["nation"]:
-            town_info.add_field(name="**국가**", value=data["nation"], inline=False)
+            town_info.add_field(name="**국가**", value=data["nation"].replace("_", "\\_"), inline=False)
         else:
             town_info.add_field(name="**국가**", value="없음", inline=False)
         town_info.add_field(name="**주민 수**", value=data["memberCount"], inline=False)
@@ -179,17 +179,17 @@ async def nation(interaction: discord.Interaction, name: str):
             return
 
         data = nation_json["data"][0]
-        nation_info = discord.Embed(title=data["name"], color=discord.Color.green())
-        nation_info.add_field(name="**공지**", value=data["nationBoard"], inline=False)
-        nation_info.add_field(name="**왕**", value=data["leader"], inline=False)
+        nation_info = discord.Embed(title=data["name"].replace("_", "\\_"), color=discord.Color.green())
+        nation_info.add_field(name="**공지**", value=data["nationBoard"].replace("_", "\\_"), inline=False)
+        nation_info.add_field(name="**왕**", value=data["leader"].replace("_", "\\_"), inline=False)
         nation_info.add_field(name="**국민 수**", value=data["memberCount"], inline=False)
-        nation_info.add_field(name="**마을**", value=data["towns"], inline=False)
+        nation_info.add_field(name="**마을**", value=data["towns"].replace("_", "\\_"), inline=False)
         if data["allies"]:
-            nation_info.add_field(name="**동맹**", value=data["allies"], inline=False)
+            nation_info.add_field(name="**동맹**", value=data["allies"].replace("_", "\\_"), inline=False)
         else:
             nation_info.add_field(name="**동맹**", value="없음", inline=False)
         if data["enemies"]:
-            nation_info.add_field(name="**적**", value=data["enemies"], inline=False)
+            nation_info.add_field(name="**적**", value=data["enemies"].replace("_", "\\_"), inline=False)
         else:
             nation_info.add_field(name="**적**", value="없음", inline=False)
         nation_info.add_field(name="**설립일**", value=f"<t:{int(data['registered'])//1000}:f>", inline=False)
