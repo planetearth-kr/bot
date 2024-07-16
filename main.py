@@ -99,7 +99,7 @@ async def on_member_join(member):
 @tree.command(name="help", description="봇 소개를 확인합니다.")
 async def help_command(interaction: discord.Interaction):
     if not is_valid_server(interaction.guild):
-        await send_message_safely(interaction, content="이 서버에서는 이 명령어를 사용할 수 없습니다.")
+        await send_message_safely(interaction, content="플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
         return
 
     help_message = (
@@ -119,7 +119,7 @@ async def help_command(interaction: discord.Interaction):
 @discord.app_commands.describe(name="플레이어 이름을 입력해주세요")
 async def resident_command(interaction: discord.Interaction, name: str):
     if not is_valid_server(interaction.guild):
-        await send_message_safely(interaction, content="이 서버에서는 이 명령어를 사용할 수 없습니다.")
+        await send_message_safely(interaction, content="플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
         return
 
     async with aiohttp.ClientSession() as session:
@@ -152,7 +152,7 @@ async def resident_command(interaction: discord.Interaction, name: str):
 @discord.app_commands.describe(name="마을 이름을 입력해주세요")
 async def town_command(interaction: discord.Interaction, name: str):
     if not is_valid_server(interaction.guild):
-        await send_message_safely(interaction, content="이 서버에서는 이 명령어를 사용할 수 없습니다.")
+        await send_message_safely(interaction, content="플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
         return
 
     async with aiohttp.ClientSession() as session:
@@ -178,7 +178,7 @@ async def town_command(interaction: discord.Interaction, name: str):
 @discord.app_commands.describe(name="국가 이름을 입력해주세요")
 async def nation_command(interaction: discord.Interaction, name: str):
     if not is_valid_server(interaction.guild):
-        await send_message_safely(interaction, content="이 서버에서는 이 명령어를 사용할 수 없습니다.")
+        await send_message_safely(interaction, content="플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
         return
 
     async with aiohttp.ClientSession() as session:
