@@ -8,7 +8,7 @@ ROLE_NAME = "인증됨"
 intents = discord.Intents.default()
 intents.members = True
 bot = discord.Client(intents=intents)
-tree = app_commands.CommandTree(bot)
+tree = discord.app_commands.CommandTree(bot)
 
 async def fetch_json(session, endpoint, params):
     url = f"https://planetearth.kr/api/{endpoint}"
