@@ -1,5 +1,6 @@
 import aiohttp
 import discord
+import re
 
 BOT_TOKEN = ""
 API_KEY = ""
@@ -9,6 +10,10 @@ intents = discord.Intents.default()
 intents.members = True
 bot = discord.Client(intents=intents)
 tree = discord.app_commands.CommandTree(bot)
+
+def is_valid_server(guild):
+    pattern = r'P[.\s]?E|PLANETEARTH|𝑃[.\s]?𝐸|𝑃𝐿𝐴𝑁𝐸𝑇𝐸𝐴𝑅𝑇𝐻|Ｐ[.\s]?Ｅ|ＰＬＡＮＥＴＥＡＲＴＨ|𝐏[.\s]?𝐄|플래닛어스|플어'
+    return bool(re.search(pattern, guild.name, re.IGNORECASE))
 
 async def fetch_json(session, endpoint, params):
     url = f"https://planetearth.kr/api/{endpoint}"
@@ -58,7 +63,7 @@ async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
     print("Joined servers:")
     for guild in bot.guilds:
-        print(f"- {guild.name}")
+        print(f"- {guild.name} ({'Valid' if is_valid_server(guild) else 'Invalid'})")
 
 @bot.event
 async def on_guild_join(guild):
@@ -66,7 +71,7 @@ async def on_guild_join(guild):
 
 @bot.event
 async def on_member_join(member):
-    if member.guild.id == 971724292482019359:
+    if not is_valid_server(member.guild) or member.guild.id == 971724292482019359:
         return
 
     async with aiohttp.ClientSession() as session:
@@ -93,6 +98,10 @@ async def on_member_join(member):
 
 @tree.command(name="help", description="봇 소개를 확인합니다.")
 async def help_command(interaction: discord.Interaction):
+    if not is_valid_server(interaction.guild):
+        await send_message_safely(interaction, content="이 서버에서는 이 명령어를 사용할 수 없습니다.")
+        return
+
     help_message = (
         "## PlanetEarth 공식봇 소개\n\n"
         "PlanetEarth에 관련된 유용한 기능을 제공합니다.\n\n"
@@ -109,6 +118,10 @@ async def help_command(interaction: discord.Interaction):
 @tree.command(name="resident", description="플레이어 정보를 확인합니다.")
 @discord.app_commands.describe(name="플레이어 이름을 입력해주세요")
 async def resident_command(interaction: discord.Interaction, name: str):
+    if not is_valid_server(interaction.guild):
+        await send_message_safely(interaction, content="이 서버에서는 이 명령어를 사용할 수 없습니다.")
+        return
+
     async with aiohttp.ClientSession() as session:
         resident_data = await handle_api_response(
             interaction,
@@ -138,6 +151,10 @@ async def resident_command(interaction: discord.Interaction, name: str):
 @tree.command(name="town", description="마을 정보를 확인합니다.")
 @discord.app_commands.describe(name="마을 이름을 입력해주세요")
 async def town_command(interaction: discord.Interaction, name: str):
+    if not is_valid_server(interaction.guild):
+        await send_message_safely(interaction, content="이 서버에서는 이 명령어를 사용할 수 없습니다.")
+        return
+
     async with aiohttp.ClientSession() as session:
         town_data = await handle_api_response(
             interaction,
@@ -160,6 +177,10 @@ async def town_command(interaction: discord.Interaction, name: str):
 @tree.command(name="nation", description="국가 정보를 확인합니다.")
 @discord.app_commands.describe(name="국가 이름을 입력해주세요")
 async def nation_command(interaction: discord.Interaction, name: str):
+    if not is_valid_server(interaction.guild):
+        await send_message_safely(interaction, content="이 서버에서는 이 명령어를 사용할 수 없습니다.")
+        return
+
     async with aiohttp.ClientSession() as session:
         nation_data = await handle_api_response(
             interaction,
