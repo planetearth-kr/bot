@@ -52,7 +52,13 @@ async def send_message_safely(channel_or_interaction, content=None, embed=None):
         else:
             await channel_or_interaction.send(content=content, embed=embed)
     except discord.errors.Forbidden:
-        print(f"No permission to send messages in channel {channel_or_interaction.channel.name} of guild {channel_or_interaction.guild.name}")
+        if isinstance(channel_or_interaction, discord.Interaction):
+            channel_name = channel_or_interaction.channel.name
+            guild_name = channel_or_interaction.guild.name
+        else:
+            channel_name = channel_or_interaction.name
+            guild_name = channel_or_interaction.guild.name
+        print(f"No permission to send messages in channel {channel_name} of guild {guild_name}")
     except Exception as e:
         print(f"Error sending message: {e}")
 
@@ -76,25 +82,25 @@ async def on_member_join(member):
 
     async with aiohttp.ClientSession() as session:
         discord_json = await fetch_json(session, "discord", {"key": API_KEY, "discord": member.id})
-        
+
         if not discord_json or discord_json["status"] == "FAILED":
             error_message = "PlanetEarth API가 응답하지 않습니다." if not discord_json else discord_json["error"].get("message", "알 수 없는 오류가 발생했습니다.")
-            await send_message_safely(member.guild.system_channel, content=f"{error_message} {member.mention}의 인증에 실패했습니다.")
+            await send_message_safely(member.guild.system_channel or member.guild.text_channels[0], content=f"{error_message} {member.mention}의 인증에 실패했습니다.")
             return
 
         try:
             await member.edit(nick=discord_json["data"][0]["name"])
         except discord.errors.Forbidden:
-            await send_message_safely(member.guild.system_channel, content=f"{member.mention}의 닉네임을 변경할 권한이 없습니다.")
+            await send_message_safely(member.guild.system_channel or member.guild.text_channels[0], content=f"{member.mention}의 닉네임을 변경할 권한이 없습니다.")
 
         verified_role = discord.utils.get(member.guild.roles, name=ROLE_NAME)
         if verified_role:
             try:
                 await member.add_roles(verified_role)
             except discord.errors.Forbidden:
-                await send_message_safely(member.guild.system_channel, content=f"{member.mention}에게 역할을 지급할 권한이 없습니다.")
+                await send_message_safely(member.guild.system_channel or member.guild.text_channels[0], content=f"{member.mention}에게 역할을 지급할 권한이 없습니다.")
         else:
-            await send_message_safely(member.guild.system_channel, content=f"서버에서 {ROLE_NAME} 역할을 찾을 수 없습니다. {member.mention}에게 역할을 지급하지 못했습니다.")
+            await send_message_safely(member.guild.system_channel or member.guild.text_channels[0], content=f"서버에서 {ROLE_NAME} 역할을 찾을 수 없습니다. {member.mention}에게 역할을 지급하지 못했습니다.")
 
 @tree.command(name="help", description="봇 소개를 확인합니다.")
 async def help_command(interaction: discord.Interaction):
