@@ -30,8 +30,8 @@ async def handle_api_response(interaction, json_response, error_message):
         await interaction.response.send_message("PlanetEarth API가 응답하지 않습니다. 디스코드 공지를 참고해주세요.")
         return None
 
-    if json_response["status"] == "FAILED":
-        code = json_response["error"]["code"]
+    if json_response.get("status") == "FAILED":
+        code = json_response.get("error", {}).get("code", "UNKNOWN_ERROR")
         if code == "NO_DATA_FOUND":
             await interaction.response.send_message(error_message)
         elif code == "RATE_LIMIT":
@@ -40,7 +40,7 @@ async def handle_api_response(interaction, json_response, error_message):
             await interaction.response.send_message("알 수 없는 오류가 발생했습니다.")
         return None
 
-    return json_response["data"][0]
+    return json_response.get("data", [None])[0]
 
 @bot.event
 async def on_ready():
@@ -65,8 +65,7 @@ async def help_command(interaction: discord.Interaction):
         "## PlanetEarth 공식봇 소개\n\n"
         "PlanetEarth에 관련된 유용한 기능을 제공합니다.\n\n"
         "### 기능\n"
-        "```- 새로운 유저가 디스코드 서버에 들어올 때 PlanetEarth에 인증된 유저인지 확인하고, 이름을 닉네임으로 설정합니다.\n"
-        "- 서버에 '인증됨' 역할이 있을 경우 자동으로 역할을 지급합니다.```\n\n"
+        "```- 준비중\n"
         "### 명령어\n"
         "```/resident - 플레이어 정보를 확인합니다.\n"
         "/town - 마을 정보를 확인합니다.\n"
@@ -91,7 +90,7 @@ async def resident_command(interaction: discord.Interaction, name: str):
             return
 
         town_data = None
-        if resident_data["town"]:
+        if resident_data.get("town"):
             town_data = await handle_api_response(
                 interaction,
                 await fetch_json(session, "town", {"key": API_KEY, "name": resident_data["town"]}),
@@ -127,8 +126,8 @@ async def town_command(interaction: discord.Interaction, name: str):
     embed.add_field(name="**공지**", value=town_data["townBoard"].replace("_", "\\_"), inline=False)
     embed.add_field(name="**시장**", value=town_data["mayor"].replace("_", "\\_"), inline=False)
     embed.add_field(name="**국가**", value=town_data["nation"].replace("_", "\\_") if town_data["nation"] else "없음", inline=False)
-    embed.add_field(name="**주민 수**", value=town_data["memberCount"], inline=False)
-    embed.add_field(name="**클레임 크기**", value=town_data["claimSize"], inline=False)
+    embed.add_field(name="**주민 수**", value=str(town_data["memberCount"]), inline=False)
+    embed.add_field(name="**클레임 크기**", value=str(town_data["claimSize"]), inline=False)
     embed.add_field(name="**설립일**", value=f"<t:{int(town_data['registered'])//1000}:f>", inline=False)
 
     await interaction.response.send_message(embed=embed)
@@ -152,7 +151,7 @@ async def nation_command(interaction: discord.Interaction, name: str):
     embed = discord.Embed(title=nation_data["name"].replace("_", "\\_"), color=discord.Color.green())
     embed.add_field(name="**공지**", value=nation_data["nationBoard"].replace("_", "\\_"), inline=False)
     embed.add_field(name="**왕**", value=nation_data["leader"].replace("_", "\\_"), inline=False)
-    embed.add_field(name="**국민 수**", value=nation_data["memberCount"], inline=False)
+    embed.add_field(name="**국민 수**", value=str(nation_data["memberCount"]), inline=False)
     embed.add_field(name="**마을**", value=nation_data["towns"].replace("_", "\\_"), inline=False)
     embed.add_field(name="**동맹**", value=nation_data["allies"].replace("_", "\\_") if nation_data["allies"] else "없음", inline=False)
     embed.add_field(name="**적**", value=nation_data["enemies"].replace("_", "\\_") if nation_data["enemies"] else "없음", inline=False)
