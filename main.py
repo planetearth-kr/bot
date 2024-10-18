@@ -7,7 +7,6 @@ API_KEY = ""
 ROLE_NAME = "인증됨"
 
 intents = discord.Intents.default()
-intents.members = True
 bot = discord.Client(intents=intents)
 tree = discord.app_commands.CommandTree(bot)
 
@@ -57,7 +56,7 @@ async def on_guild_join(guild):
 
 @tree.command(name="help", description="봇 소개를 확인합니다.")
 async def help_command(interaction: discord.Interaction):
-    if not is_valid_server(interaction.guild):
+    if not is_valid_server(interaction.guild if interaction.guild else None):
         await interaction.response.send_message("플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
         return
 
@@ -65,7 +64,7 @@ async def help_command(interaction: discord.Interaction):
         "## PlanetEarth 공식봇 소개\n\n"
         "PlanetEarth에 관련된 유용한 기능을 제공합니다.\n\n"
         "### 기능\n"
-        "```- 준비중\n"
+        "```- 준비중...```\n\n"
         "### 명령어\n"
         "```/resident - 플레이어 정보를 확인합니다.\n"
         "/town - 마을 정보를 확인합니다.\n"
