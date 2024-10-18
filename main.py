@@ -27,40 +27,20 @@ async def fetch_json(session, endpoint, params):
 
 async def handle_api_response(interaction, json_response, error_message):
     if not json_response:
-        await send_message_safely(interaction, content="PlanetEarth API가 응답하지 않습니다. 디스코드 공지를 참고해주세요.")
+        await interaction.response.send_message("PlanetEarth API가 응답하지 않습니다. 디스코드 공지를 참고해주세요.")
         return None
 
     if json_response["status"] == "FAILED":
         code = json_response["error"]["code"]
         if code == "NO_DATA_FOUND":
-            await send_message_safely(interaction, content=error_message)
+            await interaction.response.send_message(error_message)
         elif code == "RATE_LIMIT":
-            await send_message_safely(interaction, content="봇의 요청이 제한되었습니다.")
+            await interaction.response.send_message("봇의 요청이 제한되었습니다.")
         else:
-            await send_message_safely(interaction, content="알 수 없는 오류가 발생했습니다.")
+            await interaction.response.send_message("알 수 없는 오류가 발생했습니다.")
         return None
 
     return json_response["data"][0]
-
-async def send_message_safely(channel_or_interaction, content=None, embed=None):
-    try:
-        if isinstance(channel_or_interaction, discord.Interaction):
-            if channel_or_interaction.response.is_done():
-                await channel_or_interaction.followup.send(content=content, embed=embed)
-            else:
-                await channel_or_interaction.response.send_message(content=content, embed=embed)
-        else:
-            await channel_or_interaction.send(content=content, embed=embed)
-    except discord.errors.Forbidden:
-        if isinstance(channel_or_interaction, discord.Interaction):
-            channel_name = channel_or_interaction.channel.name
-            guild_name = channel_or_interaction.guild.name
-        else:
-            channel_name = channel_or_interaction.name
-            guild_name = channel_or_interaction.guild.name
-        print(f"No permission to send messages in channel {channel_name} of guild {guild_name}")
-    except Exception as e:
-        print(f"Error sending message: {e}")
 
 @bot.event
 async def on_ready():
@@ -75,37 +55,10 @@ async def on_ready():
 async def on_guild_join(guild):
     print(f"Joined {guild.name}!")
 
-@bot.event
-async def on_member_join(member):
-    if not is_valid_server(member.guild) or member.guild.id == 971724292482019359:
-        return
-
-    async with aiohttp.ClientSession() as session:
-        discord_json = await fetch_json(session, "discord", {"key": API_KEY, "discord": member.id})
-
-        if not discord_json or discord_json["status"] == "FAILED":
-            error_message = "PlanetEarth API가 응답하지 않습니다." if not discord_json else discord_json["error"].get("message", "알 수 없는 오류가 발생했습니다.")
-            await send_message_safely(member.guild.system_channel, content=f"{error_message} {member.mention}의 인증에 실패했습니다.")
-            return
-
-        try:
-            await member.edit(nick=discord_json["data"][0]["name"])
-        except discord.errors.Forbidden:
-            await send_message_safely(member.guild.system_channel, content=f"{member.mention}의 닉네임을 변경할 권한이 없습니다.")
-
-        verified_role = discord.utils.get(member.guild.roles, name=ROLE_NAME)
-        if verified_role:
-            try:
-                await member.add_roles(verified_role)
-            except discord.errors.Forbidden:
-                await send_message_safely(member.guild.system_channel, content=f"{member.mention}에게 역할을 지급할 권한이 없습니다.")
-        else:
-            await send_message_safely(member.guild.system_channel, content=f"서버에서 {ROLE_NAME} 역할을 찾을 수 없습니다. {member.mention}에게 역할을 지급하지 못했습니다.")
-
 @tree.command(name="help", description="봇 소개를 확인합니다.")
 async def help_command(interaction: discord.Interaction):
     if not is_valid_server(interaction.guild):
-        await send_message_safely(interaction, content="플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
+        await interaction.response.send_message("플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
         return
 
     help_message = (
@@ -119,13 +72,13 @@ async def help_command(interaction: discord.Interaction):
         "/town - 마을 정보를 확인합니다.\n"
         "/nation - 국가 정보를 확인합니다.```"
     )
-    await send_message_safely(interaction, content=help_message)
+    await interaction.response.send_message(help_message)
 
 @tree.command(name="resident", description="플레이어 정보를 확인합니다.")
 @discord.app_commands.describe(name="플레이어 이름을 입력해주세요")
 async def resident_command(interaction: discord.Interaction, name: str):
     if not is_valid_server(interaction.guild):
-        await send_message_safely(interaction, content="플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
+        await interaction.response.send_message("플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
         return
 
     async with aiohttp.ClientSession() as session:
@@ -152,13 +105,13 @@ async def resident_command(interaction: discord.Interaction, name: str):
     embed.add_field(name="**마을**", value=resident_data["town"].replace("_", "\\_") if resident_data["town"] else "없음", inline=False)
     embed.add_field(name="**국가**", value=town_data["nation"].replace("_", "\\_") if town_data and town_data.get("nation") else "없음", inline=False)
 
-    await send_message_safely(interaction, embed=embed)
+    await interaction.response.send_message(embed=embed)
 
 @tree.command(name="town", description="마을 정보를 확인합니다.")
 @discord.app_commands.describe(name="마을 이름을 입력해주세요")
 async def town_command(interaction: discord.Interaction, name: str):
     if not is_valid_server(interaction.guild):
-        await send_message_safely(interaction, content="플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
+        await interaction.response.send_message("플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
         return
 
     async with aiohttp.ClientSession() as session:
@@ -178,13 +131,13 @@ async def town_command(interaction: discord.Interaction, name: str):
     embed.add_field(name="**클레임 크기**", value=town_data["claimSize"], inline=False)
     embed.add_field(name="**설립일**", value=f"<t:{int(town_data['registered'])//1000}:f>", inline=False)
 
-    await send_message_safely(interaction, embed=embed)
+    await interaction.response.send_message(embed=embed)
 
 @tree.command(name="nation", description="국가 정보를 확인합니다.")
 @discord.app_commands.describe(name="국가 이름을 입력해주세요")
 async def nation_command(interaction: discord.Interaction, name: str):
     if not is_valid_server(interaction.guild):
-        await send_message_safely(interaction, content="플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
+        await interaction.response.send_message("플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
         return
 
     async with aiohttp.ClientSession() as session:
@@ -205,6 +158,6 @@ async def nation_command(interaction: discord.Interaction, name: str):
     embed.add_field(name="**적**", value=nation_data["enemies"].replace("_", "\\_") if nation_data["enemies"] else "없음", inline=False)
     embed.add_field(name="**설립일**", value=f"<t:{int(nation_data['registered'])//1000}:f>", inline=False)
 
-    await send_message_safely(interaction, embed=embed)
+    await interaction.response.send_message(embed=embed)
 
 bot.run(BOT_TOKEN)
