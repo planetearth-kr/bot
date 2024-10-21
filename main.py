@@ -7,10 +7,13 @@ API_KEY = ""
 ROLE_NAME = "인증됨"
 
 intents = discord.Intents.default()
+intents.members = True
 bot = discord.Client(intents=intents)
 tree = discord.app_commands.CommandTree(bot)
 
 def is_valid_server(guild):
+    if not guild:
+        return False
     pattern = r'P[.\s]?E|PLANETEARTH|𝑃[.\s]?𝐸|𝑃𝐿𝐴𝑁𝐸𝑇𝐸𝐴𝑅𝑇𝐻|Ｐ[.\s]?Ｅ|ＰＬＡＮＥＴＥＡＲＴＨ|𝐏[.\s]?𝐄|플래닛어스|플어'
     return bool(re.search(pattern, guild.name, re.IGNORECASE))
 
@@ -48,15 +51,68 @@ async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
     print("Joined servers:")
     for guild in bot.guilds:
-        print(f"- {guild.name} ({'Valid' if is_valid_server(guild) else 'Invalid'})")
+        status = 'Valid' if is_valid_server(guild) else 'Invalid'
+        print(f"- {guild.name} ({status})")
 
 @bot.event
 async def on_guild_join(guild):
     print(f"Joined {guild.name}!")
 
+@bot.event
+async def on_member_join(member):
+    if not is_valid_server(member.guild) or member.guild.id == 971724292482019359:
+        return
+    async with aiohttp.ClientSession() as session:
+        discord_json = await fetch_json(session, "discord", {"key": API_KEY, "discord": member.id})
+        if not discord_json or discord_json.get("status") == "FAILED":
+            if not discord_json:
+                error_message = "PlanetEarth API가 응답하지 않습니다."
+            else:
+                error_message = discord_json.get("error", {}).get("message", "알 수 없는 오류가 발생했습니다.")
+            try:
+                if member.guild.system_channel:
+                    await member.guild.system_channel.send(
+                        f"{error_message} {member.mention}의 인증에 실패했습니다."
+                    )
+            except discord.errors.Forbidden:
+                print(f"Cannot send message in system channel for {member.guild.name}: Missing permissions.")
+            return
+        try:
+            new_nick = discord_json["data"][0].get("name")
+            if new_nick:
+                await member.edit(nick=new_nick)
+        except discord.errors.Forbidden:
+            try:
+                if member.guild.system_channel:
+                    await member.guild.system_channel.send(
+                        f"{member.mention}의 닉네임을 변경할 권한이 없습니다."
+                    )
+            except discord.errors.Forbidden:
+                print(f"Cannot send message in system channel for {member.guild.name}: Missing permissions.")
+        verified_role = discord.utils.get(member.guild.roles, name=ROLE_NAME)
+        if verified_role:
+            try:
+                await member.add_roles(verified_role)
+            except discord.errors.Forbidden:
+                try:
+                    if member.guild.system_channel:
+                        await member.guild.system_channel.send(
+                            f"{member.mention}에게 역할을 지급할 권한이 없습니다."
+                        )
+                except discord.errors.Forbidden:
+                    print(f"Cannot send message in system channel for {member.guild.name}: Missing permissions.")
+        else:
+            try:
+                if member.guild.system_channel:
+                    await member.guild.system_channel.send(
+                        f"서버에서 {ROLE_NAME} 역할을 찾을 수 없습니다. {member.mention}에게 역할을 지급하지 못했습니다."
+                    )
+            except discord.errors.Forbidden:
+                print(f"Cannot send message in system channel for {member.guild.name}: Missing permissions.")
+
 @tree.command(name="help", description="봇 소개를 확인합니다.")
 async def help_command(interaction: discord.Interaction):
-    if not is_valid_server(interaction.guild if interaction.guild else None):
+    if not is_valid_server(interaction.guild):
         await interaction.response.send_message("플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
         return
 
@@ -64,7 +120,8 @@ async def help_command(interaction: discord.Interaction):
         "## PlanetEarth 공식봇 소개\n\n"
         "PlanetEarth에 관련된 유용한 기능을 제공합니다.\n\n"
         "### 기능\n"
-        "```- 준비중...```\n\n"
+        "```- 새로운 유저가 디스코드 서버에 들어올 때 PlanetEarth에 인증된 유저인지 확인하고, 이름을 닉네임으로 설정합니다.\n"
+        "- 서버에 '인증됨' 역할이 있을 경우 자동으로 역할을 지급합니다.```\n\n"
         "### 명령어\n"
         "```/resident - 플레이어 정보를 확인합니다.\n"
         "/town - 마을 정보를 확인합니다.\n"
@@ -80,9 +137,10 @@ async def resident_command(interaction: discord.Interaction, name: str):
         return
 
     async with aiohttp.ClientSession() as session:
+        resident_json = await fetch_json(session, "resident", {"key": API_KEY, "name": name})
         resident_data = await handle_api_response(
             interaction,
-            await fetch_json(session, "resident", {"key": API_KEY, "name": name}),
+            resident_json,
             "존재하지 않는 플레이어입니다!"
         )
         if not resident_data:
@@ -90,9 +148,10 @@ async def resident_command(interaction: discord.Interaction, name: str):
 
         town_data = None
         if resident_data.get("town"):
+            town_json = await fetch_json(session, "town", {"key": API_KEY, "name": resident_data["town"]})
             town_data = await handle_api_response(
                 interaction,
-                await fetch_json(session, "town", {"key": API_KEY, "name": resident_data["town"]}),
+                town_json,
                 "마을 정보를 가져오는 데 실패했습니다."
             )
 
@@ -113,9 +172,10 @@ async def town_command(interaction: discord.Interaction, name: str):
         return
 
     async with aiohttp.ClientSession() as session:
+        town_json = await fetch_json(session, "town", {"key": API_KEY, "name": name})
         town_data = await handle_api_response(
             interaction,
-            await fetch_json(session, "town", {"key": API_KEY, "name": name}),
+            town_json,
             "존재하지 않는 마을입니다!"
         )
         if not town_data:
@@ -139,9 +199,10 @@ async def nation_command(interaction: discord.Interaction, name: str):
         return
 
     async with aiohttp.ClientSession() as session:
+        nation_json = await fetch_json(session, "nation", {"key": API_KEY, "name": name})
         nation_data = await handle_api_response(
             interaction,
-            await fetch_json(session, "nation", {"key": API_KEY, "name": name}),
+            nation_json,
             "존재하지 않는 국가입니다!"
         )
         if not nation_data:
