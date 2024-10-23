@@ -12,7 +12,7 @@ bot = discord.Client(intents=intents)
 tree = discord.app_commands.CommandTree(bot)
 
 def is_valid_server(guild):
-    if not guild:
+    if not guild or guild.member_count < 10:
         return False
     pattern = r'P[.\s]?E|PLANETEARTH|𝑃[.\s]?𝐸|𝑃𝐿𝐴𝑁𝐸𝑇𝐸𝐴𝑅𝑇𝐻|Ｐ[.\s]?Ｅ|ＰＬＡＮＥＴＥＡＲＴＨ|𝐏[.\s]?𝐄|플래닛어스|플어'
     return bool(re.search(pattern, guild.name, re.IGNORECASE))
@@ -53,6 +53,9 @@ async def on_ready():
     for guild in bot.guilds:
         status = 'Valid' if is_valid_server(guild) else 'Invalid'
         print(f"- {guild.name} ({status})")
+        if not is_valid_server(guild):
+            await guild.leave()
+            print(f"Left guild: {guild.name} (Less than 10 members or invalid name)")
 
 @bot.event
 async def on_guild_join(guild):
