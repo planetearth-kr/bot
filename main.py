@@ -3,7 +3,6 @@ import discord
 import re
 
 BOT_TOKEN = ""
-API_KEY = ""
 ROLE_NAME = "인증됨"
 
 intents = discord.Intents.default()
@@ -66,7 +65,7 @@ async def on_member_join(member):
     if not is_valid_server(member.guild) or member.guild.id == 971724292482019359:
         return
     async with aiohttp.ClientSession() as session:
-        discord_json = await fetch_json(session, "discord", {"key": API_KEY, "discord": member.id})
+        discord_json = await fetch_json(session, "discord", {"discord": member.id})
         if not discord_json or discord_json.get("status") == "FAILED":
             if not discord_json:
                 error_message = "PlanetEarth API가 응답하지 않습니다."
@@ -140,7 +139,7 @@ async def resident_command(interaction: discord.Interaction, name: str):
         return
 
     async with aiohttp.ClientSession() as session:
-        resident_json = await fetch_json(session, "resident", {"key": API_KEY, "name": name})
+        resident_json = await fetch_json(session, "resident", {"name": name})
         resident_data = await handle_api_response(
             interaction,
             resident_json,
@@ -151,7 +150,7 @@ async def resident_command(interaction: discord.Interaction, name: str):
 
         town_data = None
         if resident_data.get("town"):
-            town_json = await fetch_json(session, "town", {"key": API_KEY, "name": resident_data["town"]})
+            town_json = await fetch_json(session, "town", {"name": resident_data["town"]})
             town_data = await handle_api_response(
                 interaction,
                 town_json,
@@ -175,7 +174,7 @@ async def town_command(interaction: discord.Interaction, name: str):
         return
 
     async with aiohttp.ClientSession() as session:
-        town_json = await fetch_json(session, "town", {"key": API_KEY, "name": name})
+        town_json = await fetch_json(session, "town", {"name": name})
         town_data = await handle_api_response(
             interaction,
             town_json,
@@ -202,7 +201,7 @@ async def nation_command(interaction: discord.Interaction, name: str):
         return
 
     async with aiohttp.ClientSession() as session:
-        nation_json = await fetch_json(session, "nation", {"key": API_KEY, "name": name})
+        nation_json = await fetch_json(session, "nation", {"name": name})
         nation_data = await handle_api_response(
             interaction,
             nation_json,
