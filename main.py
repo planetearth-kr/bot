@@ -17,7 +17,7 @@ def is_valid_server(guild):
     return bool(re.search(pattern, guild.name, re.IGNORECASE))
 
 async def fetch_json(session, endpoint, params):
-    url = f"https://planetearth.kr/api/{endpoint}"
+    url = f"https://api.planetearth.kr/{endpoint}"
     try:
         async with session.get(url, params=params) as response:
             response.raise_for_status()
