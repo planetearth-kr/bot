@@ -1,8 +1,14 @@
 import aiohttp
-import discord
+import asyncio
 import re
+import os
+import discord
+from discord.ext import commands
+from dotenv import load_dotenv
 
-BOT_TOKEN = ""
+load_dotenv()
+
+BOT_TOKEN = os.getenv('BOT_TOKEN')
 ROLE_NAME = "인증됨"
 
 intents = discord.Intents.default()
@@ -43,6 +49,13 @@ async def handle_api_response(interaction, json_response, error_message):
 
     return json_response.get("data", [None])[0]
 
+async def send_system_message(guild, member, message):
+    try:
+        if guild.system_channel:
+            await guild.system_channel.send(message)
+    except discord.errors.Forbidden:
+        print(f"Cannot send message in system channel for {guild.name}: Missing permissions.")
+
 @bot.event
 async def on_ready():
     await tree.sync()
@@ -64,53 +77,29 @@ async def on_guild_join(guild):
 async def on_member_join(member):
     if not is_valid_server(member.guild) or member.guild.id == 971724292482019359:
         return
+        
     async with aiohttp.ClientSession() as session:
         discord_json = await fetch_json(session, "discord", {"discord": member.id})
         if not discord_json or discord_json.get("status") == "FAILED":
-            if not discord_json:
-                error_message = "PlanetEarth API가 응답하지 않습니다."
-            else:
-                error_message = discord_json.get("error", {}).get("message", "알 수 없는 오류가 발생했습니다.")
-            try:
-                if member.guild.system_channel:
-                    await member.guild.system_channel.send(
-                        f"{error_message} {member.mention}의 인증에 실패했습니다."
-                    )
-            except discord.errors.Forbidden:
-                print(f"Cannot send message in system channel for {member.guild.name}: Missing permissions.")
+            error_message = "PlanetEarth API가 응답하지 않습니다." if not discord_json else discord_json.get("error", {}).get("message", "알 수 없는 오류가 발생했습니다.")
+            await send_system_message(member.guild, member, f"{error_message} {member.mention}의 인증에 실패했습니다.")
             return
+            
         try:
             new_nick = discord_json["data"][0].get("name")
             if new_nick:
                 await member.edit(nick=new_nick)
         except discord.errors.Forbidden:
-            try:
-                if member.guild.system_channel:
-                    await member.guild.system_channel.send(
-                        f"{member.mention}의 닉네임을 변경할 권한이 없습니다."
-                    )
-            except discord.errors.Forbidden:
-                print(f"Cannot send message in system channel for {member.guild.name}: Missing permissions.")
+            await send_system_message(member.guild, member, f"{member.mention}의 닉네임을 변경할 권한이 없습니다.")
+            
         verified_role = discord.utils.get(member.guild.roles, name=ROLE_NAME)
         if verified_role:
             try:
                 await member.add_roles(verified_role)
             except discord.errors.Forbidden:
-                try:
-                    if member.guild.system_channel:
-                        await member.guild.system_channel.send(
-                            f"{member.mention}에게 역할을 지급할 권한이 없습니다."
-                        )
-                except discord.errors.Forbidden:
-                    print(f"Cannot send message in system channel for {member.guild.name}: Missing permissions.")
+                await send_system_message(member.guild, member, f"{member.mention}에게 역할을 지급할 권한이 없습니다.")
         else:
-            try:
-                if member.guild.system_channel:
-                    await member.guild.system_channel.send(
-                        f"서버에서 {ROLE_NAME} 역할을 찾을 수 없습니다. {member.mention}에게 역할을 지급하지 못했습니다."
-                    )
-            except discord.errors.Forbidden:
-                print(f"Cannot send message in system channel for {member.guild.name}: Missing permissions.")
+            await send_system_message(member.guild, member, f"서버에서 {ROLE_NAME} 역할을 찾을 수 없습니다. {member.mention}에게 역할을 지급하지 못했습니다.")
 
 @tree.command(name="help", description="봇 소개를 확인합니다.")
 async def help_command(interaction: discord.Interaction):
