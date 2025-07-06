@@ -78,10 +78,10 @@ async def on_member_join(member):
     if not member.guild.id == 971724292482019359:
         return
 
-    if not is_valid_server(guild):
-        await guild.leave()
-        print(f"Left guild: {guild.name} (Less than 20 members or invalid name)")
-        
+    if not is_valid_server(member.guild):
+        await member.guild.leave()
+        print(f"Left guild: {member.guild.name} (Less than 20 members or invalid name)")
+
     async with aiohttp.ClientSession() as session:
         discord_json = await fetch_json(session, "discord", {"discord": member.id})
         if not discord_json or discord_json.get("status") == "FAILED":
