@@ -75,13 +75,9 @@ async def on_guild_join(guild):
 
 @bot.event
 async def on_member_join(member):
-    if not member.guild.id == 971724292482019359:
+    if not is_valid_server(member.guild) or member.guild.id == 971724292482019359:
         return
-
-    if not is_valid_server(member.guild):
-        await member.guild.leave()
-        print(f"Left guild: {member.guild.name} (Less than 20 members or invalid name)")
-
+        
     async with aiohttp.ClientSession() as session:
         discord_json = await fetch_json(session, "discord", {"discord": member.id})
         if not discord_json or discord_json.get("status") == "FAILED":
@@ -109,7 +105,7 @@ async def on_member_join(member):
 async def help_command(interaction: discord.Interaction):
     if not is_valid_server(interaction.guild):
         await interaction.response.send_message("플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
-        await member.guild.leave()
+        await interaction.guild.leave()
         print(f"Left guild: {guild.name} (Less than 20 members or invalid name)")
         return
 
@@ -131,7 +127,7 @@ async def help_command(interaction: discord.Interaction):
 async def resident_command(interaction: discord.Interaction, name: str):
     if not is_valid_server(interaction.guild):
         await interaction.response.send_message("플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
-        await member.guild.leave()
+        await interaction.guild.leave()
         print(f"Left guild: {guild.name} (Less than 20 members or invalid name)")
         return
 
@@ -168,7 +164,7 @@ async def resident_command(interaction: discord.Interaction, name: str):
 async def town_command(interaction: discord.Interaction, name: str):
     if not is_valid_server(interaction.guild):
         await interaction.response.send_message("플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
-        await member.guild.leave()
+        await interaction.guild.leave()
         print(f"Left guild: {guild.name} (Less than 20 members or invalid name)")
         return
 
@@ -197,7 +193,7 @@ async def town_command(interaction: discord.Interaction, name: str):
 async def nation_command(interaction: discord.Interaction, name: str):
     if not is_valid_server(interaction.guild):
         await interaction.response.send_message("플래닛어스 관련 디스코드에서만 사용할 수 있습니다!")
-        await member.guild.leave()
+        await interaction.guild.leave()
         print(f"Left guild: {guild.name} (Less than 20 members or invalid name)")
         return
 
