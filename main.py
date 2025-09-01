@@ -16,11 +16,25 @@ intents.members = True
 bot = discord.Client(intents=intents)
 tree = discord.app_commands.CommandTree(bot)
 
+OFFICIAL_GUILDS = {
+    971724292482019359,
+    1207333375598272553,
+    929915543337721947
+}
+
+NAME_PATTERN = re.compile(
+    r'(?:P[.\s]?E|PLANETEARTH|𝑃[.\s]?𝐸|𝑃𝐿𝐴𝑁𝐸𝑇𝐸𝐴𝑅𝑇𝐻|Ｐ[.\s]?Ｅ|ＰＬＡＮＥＴＥＡＲＴＨ|𝐏[.\s]?𝐄|플래닛어스|플어)',
+    re.IGNORECASE
+)
+
 def is_valid_server(guild):
-    if not guild or guild.member_count < 7 or guild.member_count > 300:
+    if not guild:
         return False
-    pattern = r'P[.\s]?E|PLANETEARTH|𝑃[.\s]?𝐸|𝑃𝐿𝐴𝑁𝐸𝑇𝐸𝐴𝑅𝑇𝐻|Ｐ[.\s]?Ｅ|ＰＬＡＮＥＴＥＡＲＴＨ|𝐏[.\s]?𝐄|플래닛어스|플어'
-    return bool(re.search(pattern, guild.name, re.IGNORECASE))
+    if getattr(guild, "id", None) in OFFICIAL_GUILDS:
+        return True
+    if guild.member_count < 7 or guild.member_count > 300:
+        return False
+    return bool(NAME_PATTERN.search(getattr(guild, "name", "") or ""))
 
 async def fetch_json(session, endpoint, params):
     url = f"https://api.planetearth.kr/{endpoint}"
