@@ -67,7 +67,9 @@ async def on_ready():
         print(f"- {guild.name} ({status})")
         if not is_valid_server(guild):
             await guild.leave()
-            print(f"Left guild: {guild.name} (Less than 7 members, Over 300 members, or invalid name)")
+            print(f"Left guild: {guild.name} "
+            f"(Members: {guild.member_count}, "
+            f"Reason: Less than 7 members, Over 300 members, or invalid name)")
     print("Successfully started!")
 
 @bot.event
@@ -107,7 +109,7 @@ async def help_command(interaction: discord.Interaction):
     if not is_valid_server(interaction.guild):
         await interaction.response.send_message("플래닛어스 관련 디스코드가 아니거나 인원수 조건을 만족하지 않습니다!")
         await interaction.guild.leave()
-        print(f"Left guild: {interaction.guild.name} (Less than 7 members, Over 300 members, or invalid name)")
+        print(f"Left guild: {interaction.guild.name} (Members: {interaction.guild.member_count}, Reason: Less than 7 members, Over 300 members, or invalid name)")
         return
 
     help_message = (
@@ -129,7 +131,7 @@ async def resident_command(interaction: discord.Interaction, name: str):
     if not is_valid_server(interaction.guild):
         await interaction.response.send_message("플래닛어스 관련 디스코드가 아니거나 인원수 조건을 만족하지 않습니다!")
         await interaction.guild.leave()
-        print(f"Left guild: {interaction.guild.name} (Less than 7 members, Over 300 members, or invalid name)")
+        print(f"Left guild: {interaction.guild.name} (Members: {interaction.guild.member_count}, Reason: Less than 7 members, Over 300 members, or invalid name)")
         return
 
     async with aiohttp.ClientSession() as session:
@@ -166,7 +168,7 @@ async def town_command(interaction: discord.Interaction, name: str):
     if not is_valid_server(interaction.guild):
         await interaction.response.send_message("플래닛어스 관련 디스코드가 아니거나 인원수 조건을 만족하지 않습니다!")
         await interaction.guild.leave()
-        print(f"Left guild: {interaction.guild.name} (Less than 7 members, Over 300 members, or invalid name)")
+        print(f"Left guild: {interaction.guild.name} (Members: {interaction.guild.member_count}, Reason: Less than 7 members, Over 300 members, or invalid name)")
         return
 
     async with aiohttp.ClientSession() as session:
@@ -195,7 +197,7 @@ async def nation_command(interaction: discord.Interaction, name: str):
     if not is_valid_server(interaction.guild):
         await interaction.response.send_message("플래닛어스 관련 디스코드가 아니거나 인원수 조건을 만족하지 않습니다!")
         await interaction.guild.leave()
-        print(f"Left guild: {interaction.guild.name} (Less than 7 members, Over 300 members, or invalid name)")
+        print(f"Left guild: {interaction.guild.name} (Members: {interaction.guild.member_count}, Reason: Less than 7 members, Over 300 members, or invalid name)")
         return
 
     async with aiohttp.ClientSession() as session:
